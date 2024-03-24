@@ -60,12 +60,39 @@ def fill_board(board):
         board.board_data[row].append(Board_Cell(board, x, y, row, column))
         x += cell_size
       y += cell_size
+
+def show_game():
+  button.place_forget()
+  board_1 = Board(10, 10) # Placing the board down
   
-board_1 = Board(0, 0)
-board_2 = Board(340, 0)
+  fill_board(board_1) # Filling the board with its cells
+  
+  # Modifying cells (board_data[row][column])
+  for i in range(3,9):
+    board_1.board_data[7][i].change_cell_color("red")
+  
+  board_1.board_data[6][2].change_cell_color("red")
+  board_1.board_data[6][9].change_cell_color("red")
+  board_1.board_data[2][4].change_cell_color("red")
+  board_1.board_data[3][4].change_cell_color("red")
+  board_1.board_data[2][7].change_cell_color("red")
+  board_1.board_data[3][7].change_cell_color("red")
+  
+  board_2 = Board(350, 10)
+  
+  fill_board(board_2)
+  
+  for i in range(3,9):
+    board_2.board_data[7][i].change_cell_color("blue")
+  
+  board_2.board_data[8][2].change_cell_color("blue")
+  board_2.board_data[8][9].change_cell_color("blue")
+  board_2.board_data[2][4].change_cell_color("blue")
+  board_2.board_data[3][4].change_cell_color("blue")
+  board_2.board_data[2][7].change_cell_color("blue")
+  board_2.board_data[3][7].change_cell_color("blue")
 
-fill_board(board_1)
-board_1.board_data[3][6].change_cell_color("red")
-
+button = tk.Button(text="start game", command=show_game)
+button.place(x = 0,y = 0)
 
 tk.mainloop()
