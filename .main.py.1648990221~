@@ -1,0 +1,43 @@
+import tkinter as tk
+
+window = tk.Tk()
+window.title("Hello world")
+window.geometry("110x110")
+
+space = tk.Canvas(width = 110, height = 110)
+space.place(x = 0, y = 0)
+
+class Board:
+  def __init__(self):
+
+    # Contents of the board
+    self.board_data = {
+      0:["K","A","R","T","U","P","E","L","I","S"],
+      1:[],
+      2:[],
+      3:[],
+      4:[],
+      5:[],
+      6:[],
+      7:[],
+      8:[],
+      9:[],
+      10:[],
+    }
+
+    # Creation of the boards static data
+    y = 0
+    x = 10
+    for key in self.board_data:
+      if key == 0:
+        for element in self.board_data[key]:
+          space.create_rectangle(x,0,x+10,10)
+          space.create_text(x+5,5, text = element)
+          x =+ 10
+      else:
+        space.create_rectangle(0,y,10,y+10)
+        space.create_text(5,y+5, text = f"{key")
+          
+        
+
+tk.mainloop()
