@@ -46,31 +46,34 @@ class Board:
         y += cell_size
 
   # For getting the first selected cell and changing it.
-  def selected_cell(self, row, column, starting_cell = False):
-    if not starting_cell:
-      self.space.itemconfigure(self.board_data[self.selected[0]][self.selected[1]], fill='lightblue')
-    self.space.itemconfigure(self.board_data[row][column], fill='green')
+  def selected_cell(self, row, column):
     self.selected = [row, column]
+    coords = self.space.coords(self.board_data[self.selected[0]][self.selected[1]])
+    self.cursor = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="black")
 
   def cell_movement(self, event):
     pressed_key = event.keysym.lower()
     
     if pressed_key == 'w' and self.selected[0] > 1:
-      self.selected_cell(self.selected[0]-1, self.selected[1])
+      self.space.move(self.cursor, 0, -30)
+      self.selected = [self.selected[0]-1, self.selected[1]]
     elif pressed_key == 'a' and self.selected[1] > 0:
-      self.selected_cell(self.selected[0], self.selected[1]-1)
+      self.space.move(self.cursor, -30, 0)
+      self.selected = [self.selected[0], self.selected[1]-1]
     elif pressed_key == 's' and self.selected[0] < 10:
-      self.selected_cell(self.selected[0]+1, self.selected[1])
+      self.space.move(self.cursor, 0, 30)
+      self.selected = [self.selected[0]+1, self.selected[1]]
     elif pressed_key == 'd' and self.selected[1] < 9:
-      self.selected_cell(self.selected[0], self.selected[1]+1)
+      self.space.move(self.cursor, 30, 0)
+      self.selected = [self.selected[0], self.selected[1]+1]
 
 # Function to start the game
 def show_game():
   button.place_forget()
   board_1 = Board(10, 10)
-  board_1.selected_cell(1,2, starting_cell = True)
+  board_1.selected_cell(1,2)
   board_2 = Board(350, 10)
-  board_2.selected_cell(4,2, starting_cell = True)
+  board_2.selected_cell(4,2)
 
 button = tk.Button(text="start game", command=show_game)
 button.place(x = 0,y = 0)
