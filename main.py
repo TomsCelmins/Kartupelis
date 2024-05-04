@@ -11,7 +11,7 @@ class Board:
     # Board Variables
     cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
     Board.instances.append(self)
-    self.selected_area = {
+    self.cursor = {
       "row": cursor_row,
       "column": cursor_column,
       "ship_size": 1,
@@ -55,78 +55,106 @@ class Board:
         y += cell_size
 
     # The cursor
-    coords = self.space.coords(self.board_data[self.selected_area["row"]][self.selected_area["column"]-1])
-    self.selected_area["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="red")
+    coords = self.space.coords(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
+    self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="red")
     self.space.bind_all('<Key>', self.cell_movement)
 
   def focus(self):
     self.space.bind_all('<Key>', self.cell_movement)
-    self.space.itemconfigure(self.selected_area["overlay"], fill="black")
+    self.space.itemconfigure(self.cursor["overlay"], fill="black")
 
   def redraw_ship(self):
-    self.space.delete(self.selected_area["overlay"])
-    coords = self.space.coords(self.board_data[self.selected_area["row"]][self.selected_area["column"]-1])
-    if self.selected_area["ship_size"] == 1:
-      self.selected_area["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="black")
+    print(self.cursor)
+    self.space.delete(self.cursor["overlay"])
+    coords = self.space.coords(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
+    if self.cursor["ship_size"] == 1:
+      self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="black")
     else:
-      match self.selected_area["direction"]:
+      match self.cursor["direction"]:
         case "West":
-          self.selected_area["overlay"] = self.space.create_rectangle(coords[0]-(self.selected_area["ship_size"]-1)*cell_size,coords[1],coords[2],coords[3], fill="black")
+          self.cursor["overlay"] = self.space.create_rectangle(coords[0]-(self.cursor["ship_size"]-1)*cell_size,coords[1],coords[2],coords[3], fill="black")
         case "North":
-          self.selected_area["overlay"] = self.space.create_rectangle(coords[0],coords[1]-(self.selected_area["ship_size"]-1)*cell_size,coords[2],coords[3], fill="black")
+          self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1]-(self.cursor["ship_size"]-1)*cell_size,coords[2],coords[3], fill="black")
         case "East":
-          self.selected_area["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2]+(self.selected_area["ship_size"]-1)*cell_size,coords[3], fill="black")
+          self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2]+(self.cursor["ship_size"]-1)*cell_size,coords[3], fill="black")
         case "South":
-          self.selected_area["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2],coords[3]+(self.selected_area["ship_size"]-1)*cell_size, fill="black")
+          self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2],coords[3]+(self.cursor["ship_size"]-1)*cell_size, fill="black")
     
   def cell_movement(self, event):
     pressed_key = event.keysym.lower()
 
     # Moving
     if pressed_key in {"w", "a", "s", "d"}:
-      if pressed_key == 'w' and self.selected_area["row"] > (self.selected_area["ship_size"] if self.selected_area["direction"] == "North" else 1):
-        self.space.move(self.selected_area["overlay"], 0, -30)
-        self.selected_area["row"] -= 1
-      elif pressed_key == 'a' and self.selected_area["column"] > (self.selected_area["ship_size"] if self.selected_area["direction"] == "West" else 1):
-        self.space.move(self.selected_area["overlay"], -30, 0)
-        self.selected_area["column"] -= 1
-      elif pressed_key == 's' and self.selected_area["row"] < (11-self.selected_area["ship_size"] if self.selected_area["direction"] == "South" else 10):
-        self.space.move(self.selected_area["overlay"], 0, 30)
-        self.selected_area["row"] += 1
-      elif pressed_key == 'd' and self.selected_area["column"] < (11-self.selected_area["ship_size"] if self.selected_area["direction"] == "East" else 10):
-        self.space.move(self.selected_area["overlay"], 30, 0)
-        self.selected_area["column"] += 1
+      if pressed_key == 'w' and self.cursor["row"] > (self.cursor["ship_size"] if self.cursor["direction"] == "North" else 1):
+        self.space.move(self.cursor["overlay"], 0, -30)
+        self.cursor["row"] -= 1
+      elif pressed_key == 'a' and self.cursor["column"] > (self.cursor["ship_size"] if self.cursor["direction"] == "West" else 1):
+        self.space.move(self.cursor["overlay"], -30, 0)
+        self.cursor["column"] -= 1
+      elif pressed_key == 's' and self.cursor["row"] < (11-self.cursor["ship_size"] if self.cursor["direction"] == "South" else 10):
+        self.space.move(self.cursor["overlay"], 0, 30)
+        self.cursor["row"] += 1
+      elif pressed_key == 'd' and self.cursor["column"] < (11-self.cursor["ship_size"] if self.cursor["direction"] == "East" else 10):
+        self.space.move(self.cursor["overlay"], 30, 0)
+        self.cursor["column"] += 1
+        
     # Changing Direction
     elif pressed_key in {"q", "e"}:
+      # Early return if invalid
+      match self.cursor["direction"]:
+        case "West":
+          if (self.cursor["row"]-self.cursor["ship_size"] < 0 if pressed_key == "e" else self.cursor["row"]+self.cursor["ship_size"] > 11):
+            return
+        case "North":
+          if (self.cursor["column"]-self.cursor["ship_size"] < 0 if pressed_key == "q" else self.cursor["column"]+self.cursor["ship_size"] > 11):
+            return
+        case "East":
+          if (self.cursor["row"]-self.cursor["ship_size"] < 0 if pressed_key == "q" else self.cursor["row"]+self.cursor["ship_size"] > 11):
+            return
+        case "South":
+          if (self.cursor["column"]-self.cursor["ship_size"] < 0 if pressed_key == "e" else self.cursor["column"]+self.cursor["ship_size"] > 11):
+            return
+    
       directions = ["West", "North", "East", "South"]
+      
       match pressed_key:
         case "q":
-          if self.selected_area["direction"] == "West":
-            self.selected_area["direction"] = "South"
-          else:
-            self.selected_area["direction"] = directions[directions.index(self.selected_area["direction"])-1]
+          self.cursor["direction"] = directions[directions.index(self.cursor["direction"])-1]
         case "e":
-          if self.selected_area["direction"] == "South":
-            self.selected_area["direction"] = "West"
-          else:
-            self.selected_area["direction"] = directions[directions.index(self.selected_area["direction"])+1]
+          directions_reversed = directions[::-1]
+          self.cursor["direction"] = directions_reversed[directions_reversed.index(self.cursor["direction"])-1]
       self.redraw_ship()
             
     # Selecting ship size
     elif pressed_key in {"1", "2", "3", "4"}:
-      self.selected_area["ship_size"] = int(pressed_key)
+
+      match self.cursor["direction"]:
+        case "West":
+          if self.cursor["column"]-int(pressed_key) < 0:
+            return
+        case "North":
+          if self.cursor["row"]-int(pressed_key) < 0:
+            return
+        case "East":
+          if self.cursor["column"]+int(pressed_key) > 11:
+            return
+        case "South":
+          if self.cursor["row"]+int(pressed_key) > 11:
+            return
+      
+      self.cursor["ship_size"] = int(pressed_key)
       self.redraw_ship()
 
     # Dev commands for switching boards
     match pressed_key:
       case "v":
-        self.space.itemconfigure(self.selected_area["overlay"], fill="red")
+        self.space.itemconfigure(self.cursor["overlay"], fill="red")
         Board.instances[0].focus()
       case "b":
-        self.space.itemconfigure(self.selected_area["overlay"], fill="red")
+        self.space.itemconfigure(self.cursor["overlay"], fill="red")
         Board.instances[1].focus()
         
-    print(self.selected_area)
+    print(self.cursor)
     
 # Function to start the game
 def show_game():
