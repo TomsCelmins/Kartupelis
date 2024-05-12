@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 
 window = tk.Tk()
@@ -11,6 +12,7 @@ class Board:
     # Board Variables
     cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
     Board.instances.append(self)
+    self.overlays = []
     self.cursor = {
       "row": cursor_row,
       "column": cursor_column,
@@ -50,12 +52,14 @@ class Board:
         self.space.create_text(cell_size/2,y+cell_size/2, text = f"{key}")
         for element in range(10):
           cell = self.space.create_rectangle(x,y,x+cell_size,y+cell_size, fill='lightblue')
-          self.board_data[key].append(cell)
+          cell_coords = self.space.coords(cell)
+          cell_coords.append(0.0) # Extra space for the state
+          self.board_data[key].append(cell_coords) # Storing the coords
           x += cell_size
         y += cell_size
 
     # The cursor
-    coords = self.space.coords(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
+    coords = self.board_data[self.cursor["row"]][self.cursor["column"]-1]
     self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="red")
     self.space.bind_all('<Key>', self.cell_movement)
 
@@ -63,10 +67,15 @@ class Board:
     self.space.bind_all('<Key>', self.cell_movement)
     self.space.itemconfigure(self.cursor["overlay"], fill="black")
 
+  def placement_warning(self):
+    self.space.itemconfigure(self.cursor["overlay"], fill="red")
+    self.space.update()
+    time.sleep(0.2)
+    self.space.itemconfigure(self.cursor["overlay"], fill="black")
+
   def redraw_ship(self):
-    print(self.cursor)
     self.space.delete(self.cursor["overlay"])
-    coords = self.space.coords(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
+    coords = self.board_data[self.cursor["row"]][self.cursor["column"]-1]
     if self.cursor["ship_size"] == 1:
       self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="black")
     else:
@@ -82,9 +91,11 @@ class Board:
     
   def cell_movement(self, event):
     pressed_key = event.keysym.lower()
+    print(pressed_key)
+    print(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
 
     # Moving
-    if pressed_key in {"w", "a", "s", "d"}:
+    if pressed_key in {'w', 'a', 's', 'd'}:
       if pressed_key == 'w' and self.cursor["row"] > (self.cursor["ship_size"] if self.cursor["direction"] == "North" else 1):
         self.space.move(self.cursor["overlay"], 0, -30)
         self.cursor["row"] -= 1
@@ -97,26 +108,66 @@ class Board:
       elif pressed_key == 'd' and self.cursor["column"] < (11-self.cursor["ship_size"] if self.cursor["direction"] == "East" else 10):
         self.space.move(self.cursor["overlay"], 30, 0)
         self.cursor["column"] += 1
-        
+
+    elif pressed_key == 'return':
+      if self.cursor["ship_size"] == 1:
+        return
+      # Safety checks to see if a nother ship is in the way
+      for cell in range(self.cursor["ship_size"]):
+        match self.cursor["direction"]:
+          case "West":
+            if self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] == 'occupied':
+              self.placement_warning()
+              return
+          case "North":
+            if self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] == 'occupied':
+              self.placement_warning()
+              return
+          case "East":
+            if self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] == 'occupied':
+              self.placement_warning()
+              return
+          case "South":
+            if self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] == 'occupied':
+              self.placement_warning()
+              return
+      # Putting down the newly placed ship
+      new_overlay = self.space.create_rectangle(self.space.coords(self.cursor["overlay"]), fill='black')
+      self.overlays.append(new_overlay)
+      # Reference that these cells currently have a ship on it
+      for cell in range(self.cursor["ship_size"]):
+        match self.cursor["direction"]:
+          case "West":
+            self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] = 'occupied'
+          case "North":
+            self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] = 'occupied'
+          case "East":
+            self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] = 'occupied'
+          case "South":
+            self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] = 'occupied'
+    
     # Changing Direction
-    elif pressed_key in {"q", "e"}:
+    elif pressed_key in {'q', 'e'}:
       # Early return if invalid
       match self.cursor["direction"]:
         case "West":
           if (self.cursor["row"]-self.cursor["ship_size"] < 0 if pressed_key == "e" else self.cursor["row"]+self.cursor["ship_size"] > 11):
+            self.placement_warning()
             return
         case "North":
           if (self.cursor["column"]-self.cursor["ship_size"] < 0 if pressed_key == "q" else self.cursor["column"]+self.cursor["ship_size"] > 11):
+            self.placement_warning()
             return
         case "East":
           if (self.cursor["row"]-self.cursor["ship_size"] < 0 if pressed_key == "q" else self.cursor["row"]+self.cursor["ship_size"] > 11):
+            self.placement_warning()
             return
         case "South":
           if (self.cursor["column"]-self.cursor["ship_size"] < 0 if pressed_key == "e" else self.cursor["column"]+self.cursor["ship_size"] > 11):
+            self.placement_warning()
             return
     
       directions = ["West", "North", "East", "South"]
-      
       match pressed_key:
         case "q":
           self.cursor["direction"] = directions[directions.index(self.cursor["direction"])-1]
@@ -131,15 +182,19 @@ class Board:
       match self.cursor["direction"]:
         case "West":
           if self.cursor["column"]-int(pressed_key) < 0:
+            self.placement_warning()
             return
         case "North":
           if self.cursor["row"]-int(pressed_key) < 0:
+            self.placement_warning()
             return
         case "East":
           if self.cursor["column"]+int(pressed_key) > 11:
+            self.placement_warning()
             return
         case "South":
           if self.cursor["row"]+int(pressed_key) > 11:
+            self.placement_warning()
             return
       
       self.cursor["ship_size"] = int(pressed_key)
