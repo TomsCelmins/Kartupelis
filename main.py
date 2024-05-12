@@ -8,14 +8,20 @@ cell_size = 30 # Size of the boards individual cell's, which would also mean the
 class Board:
   instances = []
   
-  def __init__(self, start_loc_x, start_loc_y, cursor_row, cursor_column):
+  def __init__(self, start_loc_x, start_loc_y):
     # Board Variables
     cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
     Board.instances.append(self)
     self.overlays = []
+    # key == ship size, element == amount of ships
+    self.ship_amounts = {
+      2: 3,
+      3: 2,
+      4: 1
+    }
     self.cursor = {
-      "row": cursor_row,
-      "column": cursor_column,
+      "row": 5,
+      "column": 5,
       "ship_size": 1,
       "direction": "North",
       "overlay": None
@@ -110,42 +116,63 @@ class Board:
         self.cursor["column"] += 1
 
     elif pressed_key == 'return':
-      if self.cursor["ship_size"] == 1:
+      if self.cursor["ship_size"] == 1: # We dont have 1 sized ships
         return
       # Safety checks to see if a nother ship is in the way
       for cell in range(self.cursor["ship_size"]):
         match self.cursor["direction"]:
           case "West":
-            if self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] == 'occupied':
+            if self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] != 0.0:
               self.placement_warning()
               return
           case "North":
-            if self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] == 'occupied':
+            if self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] != 0.0:
               self.placement_warning()
               return
           case "East":
-            if self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] == 'occupied':
+            if self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] != 0.0:
               self.placement_warning()
               return
-          case "South":
-            if self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] == 'occupied':
+          case "South": 
+            if self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] != 0.0:
               self.placement_warning()
               return
-      # Putting down the newly placed ship
-      new_overlay = self.space.create_rectangle(self.space.coords(self.cursor["overlay"]), fill='black')
-      self.overlays.append(new_overlay)
       # Reference that these cells currently have a ship on it
+      ship_identifier = self.cursor["ship_size"]*10+self.ship_amounts[self.cursor["ship_size"]]
+      new_overlay = self.space.create_rectangle(self.space.coords(self.cursor["overlay"]), fill='black')
+      self.overlays.append([new_overlay, ship_identifier])
       for cell in range(self.cursor["ship_size"]):
         match self.cursor["direction"]:
           case "West":
-            self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] = 'occupied'
+            self.board_data[self.cursor["row"]][self.cursor["column"]-cell-1][4] = ship_identifier
           case "North":
-            self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] = 'occupied'
+            self.board_data[self.cursor["row"]-cell][self.cursor["column"]-1][4] = ship_identifier
           case "East":
-            self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] = 'occupied'
+            self.board_data[self.cursor["row"]][self.cursor["column"]+cell-1][4] = ship_identifier
           case "South":
-            self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] = 'occupied'
-    
+            self.board_data[self.cursor["row"]+cell][self.cursor["column"]-1][4] = ship_identifier
+      # Remove 1 ship from the amount
+      self.ship_amounts[self.cursor["ship_size"]] -= 1
+      if self.ship_amounts[self.cursor["ship_size"]] == 0:
+        self.cursor["ship_size"] = 1
+        self.redraw_ship()
+
+    elif pressed_key == 'backspace':
+      if self.overlays == []: # Nothing to delete if theres nothing on the board
+        return
+      object = self.overlays[len(self.overlays)-1]
+      print(object)
+      for row in self.board_data:
+        if row == 0:
+          continue
+        for cell in self.board_data[row]:
+          if cell[4] == object[1]:
+            cell[4] = 0.0
+
+      self.space.itemconfigure(object[0], state='hidden')
+      self.ship_amounts[object[1]//10] += 1
+      self.overlays.remove(object)
+      
     # Changing Direction
     elif pressed_key in {'q', 'e'}:
       # Early return if invalid
@@ -178,7 +205,10 @@ class Board:
             
     # Selecting ship size
     elif pressed_key in {"1", "2", "3", "4"}:
-
+      if int(pressed_key) != 1 and self.ship_amounts[int(pressed_key)] == 0: # Cant place ships if there are none left
+        self.placement_warning()
+        return
+        
       match self.cursor["direction"]:
         case "West":
           if self.cursor["column"]-int(pressed_key) < 0:
@@ -214,8 +244,8 @@ class Board:
 # Function to start the game
 def show_game():
   button.place_forget()
-  board_1 = Board(10, 10, 1, 2)
-  board_2 = Board(350, 10, 4, 2)
+  board_1 = Board(10, 10)
+  board_2 = Board(350, 10)
 
 button = tk.Button(text="start game", command=show_game)
 button.place(x = 0,y = 0)
