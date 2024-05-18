@@ -6,17 +6,19 @@ window.geometry("800x500")
 
 cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
 class Board:
-  instances = []
+  previous_instance = None # For switching to the previous board
   
   def __init__(self, start_loc_x, start_loc_y):
-    # Board Variables
-    cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
-    Board.instances.append(self)
+    # --- Board Variables ---
+    if Board.previous_instance is None:
+      Board.previous_instance = self
+      self.name = "1 spēlētājs"
+    else:
+      self.name = "2 spēlētājs"
     self.overlays = [] # Each element contains [(overlay_id), (ship_identifier)]
     self.hit_ships = []
     self.mode = "placing"
-    # key == ship size, element == amount of ships
-    self.ship_amounts = {
+    self.ship_amounts = { # key == ship size, element == amount of ships 
       2: 3,
       3: 2,
       4: 1,
@@ -44,7 +46,7 @@ class Board:
     }
 
     # --- Creation of the board ---
-    self.space = tk.Canvas(width = cell_size*11, height = cell_size*11, highlightthickness=1, highlightbackground='black')
+    self.space = tk.Canvas(width = cell_size*11, height = cell_size*12, highlightthickness=1, highlightbackground='black')
     self.space.place(x = start_loc_x, y = start_loc_y)
     
     y = cell_size # For the row
@@ -67,14 +69,18 @@ class Board:
           x += cell_size
         y += cell_size
 
+    self.space.create_text(cell_size*5.5,cell_size*11+cell_size/2, text=self.name)
     # The cursor
     coords = self.board_data[self.cursor["row"]][self.cursor["column"]-1]
-    self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill="red")
+    self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill='black')
     self.space.bind_all('<Key>', self.key_press)
 
-  def focus(self):
+  def switch_board(self):
     self.space.bind_all('<Key>', self.key_press)
-    self.space.itemconfigure(self.cursor["overlay"], fill="black")
+
+  def show_board(self):
+      for object in self.overlays:
+        self.space.itemconfigure(object[0], state='normal', fill='green')
 
   def placement_warning(self):
     self.space.itemconfigure(self.cursor["overlay"], fill="red")
@@ -99,9 +105,9 @@ class Board:
           self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2],coords[3]+(self.cursor["ship_size"]-1)*cell_size, fill="black")
     
   def key_press(self, event):
+    if self.mode == 'end':
+      return
     pressed_key = event.keysym.lower()
-    print(pressed_key)
-    print(self.board_data[self.cursor["row"]][self.cursor["column"]-1])
 
     # Moving
     if pressed_key in {'w', 'a', 's', 'd'}:
@@ -189,6 +195,9 @@ class Board:
             self.space.itemconfigure(object[0], state='hidden')
 
           self.mode = "shooting"
+          other_board = Board.previous_instance
+          Board.previous_instance = self
+          other_board.switch_board()
           
         # Change cardinal direction
         case 'q'|'e':
@@ -263,29 +272,25 @@ class Board:
               self.total_ships_left -= 1
               # End game if all ships have been destroyed
               if self.total_ships_left == 0:
-                print("GAME END!")
-              
+                print(Board.previous_instance.name, "uzvar!")
+                self.mode = 'end'
+                Board.previous_instance.show_board()
             cell[4] = "shot"
-          else:
+          elif cell[4] != 'shot':
             cell[4] = "shot"
             self.space.create_oval(cell[0]+5,cell[1]+5,cell[2]-5,cell[3]-5)
-
-    # Dev commands for switching boards
-    match pressed_key:
-      case "v":
-        self.space.itemconfigure(self.cursor["overlay"], fill="red")
-        Board.instances[0].focus()
-      case "b":
-        self.space.itemconfigure(self.cursor["overlay"], fill="red")
-        Board.instances[1].focus()
-        
-    print(self.cursor)
+            
+            other_board = Board.previous_instance
+            Board.previous_instance = self
+            other_board.switch_board()
+          else:
+            self.placement_warning()
     
 # Function to start the game
 def show_game():
   button.place_forget()
-  board_1 = Board(10, 10)
-  board_2 = Board(350, 10)
+  Board(10, 10)
+  Board(350, 10)
 
 button = tk.Button(text="start game", command=show_game)
 button.place(x = 0,y = 0)
