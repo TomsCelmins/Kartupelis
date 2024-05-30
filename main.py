@@ -413,8 +413,8 @@ Guide_button.place(x=10, y=460)
 # Function to start the game
 def show_game():
   button.place_forget()
-  Board(350, 10)
-  Board(10, 10)
+  Board(450, 80)
+  Board(10, 80)
 
 # Headline 
 kartupeli_text = tk.Label(window, text="KARTUPELI", font=("Helvetica", 40), bg='lightblue')
