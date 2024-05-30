@@ -3,6 +3,7 @@ import tkinter as tk
 import random
 
 window = tk.Tk()
+
 window.geometry("1000x500")
 
 canvas_1 = tk.Canvas(window, width=1000, height=500,bg='lightblue')
@@ -107,6 +108,13 @@ cell_size = 30 # Size of the boards individual cell's, which would also mean the
 class Board:
   previous_instance = None # For switching to the previous board
 
+window.geometry("800x500")
+
+cell_size = 30 # Size of the boards individual cell's, which would also mean the boards size.
+class Board:
+  previous_instance = None # For switching to the previous board
+  
+
   def __init__(self, start_loc_x, start_loc_y):
     # --- Board Variables ---
     if Board.previous_instance is None:
@@ -174,6 +182,7 @@ class Board:
     self.cursor["overlay"] = self.space.create_oval(coords[0]+10,coords[1]+10,coords[2]-10,coords[3]-10, fill='black')
     self.space.bind_all('<Key>', self.key_press)
 
+
   def switch_board(self):
     self.space.bind_all('<Key>', self.key_press)
 
@@ -202,7 +211,7 @@ class Board:
           self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2]+(self.cursor["ship_size"]-1)*cell_size,coords[3], fill="black")
         case "South":
           self.cursor["overlay"] = self.space.create_rectangle(coords[0],coords[1],coords[2],coords[3]+(self.cursor["ship_size"]-1)*cell_size, fill="black")
-
+    
   def key_press(self, event):
     if self.mode == 'end':
       return
@@ -266,7 +275,7 @@ class Board:
           if self.ship_amounts[self.cursor["ship_size"]] == 0:
             self.cursor["ship_size"] = 1
             self.redraw_ship()
-
+    
         # Delete previously placed ship
         case 'backspace':
           if self.overlays == []: # Nothing to delete if theres nothing on the board
@@ -278,10 +287,11 @@ class Board:
             for cell in self.board_data[row]:
               if cell[4] == object[1]:
                 cell[4] = 0.0
-
+    
           self.space.itemconfigure(object[0], state='hidden')
           self.ship_amounts[object[1]//10] += 1
           self.overlays.remove(object)
+
 
         # Confirming your ship placement
         case 'return':
@@ -385,6 +395,7 @@ class Board:
           else:
             self.placement_warning()
 
+
 def show_guide():
   pass
 
@@ -409,11 +420,13 @@ def show_game():
   button.place_forget()
   Board(10, 10)
   Board(350, 10)
+
 # Headline 
 kartupeli_text = tk.Label(window, text="KARTUPELI", font=("Helvetica", 40), bg='lightblue')
 kartupeli_text.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 # Button that starts the game
 button = tk.Button(text="START GAME", command=show_game, height=5, width=20, fg='black',bg='yellow')
 button.place(x = 400,y = 200)
+
 
 window.mainloop()
