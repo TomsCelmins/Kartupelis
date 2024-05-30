@@ -119,9 +119,9 @@ class Board:
     # --- Board Variables ---
     if Board.previous_instance is None:
       Board.previous_instance = self
-      self.name = "1 spēlētājs"
-    else:
       self.name = "2 spēlētājs"
+    else:
+      self.name = "1 spēlētājs"
     self.overlays = [] # Each element contains [(overlay_id), (ship_identifier)]
     self.hit_ships = []
     self.mode = "placing"
@@ -395,11 +395,6 @@ class Board:
           else:
             self.placement_warning()
 
-
-def show_guide():
-  pass
-
-
 # will show guides and explain how to play the game
 # Guide screen
 def toogle_guide():
@@ -418,8 +413,8 @@ Guide_button.place(x=10, y=460)
 # Function to start the game
 def show_game():
   button.place_forget()
-  Board(10, 10)
   Board(350, 10)
+  Board(10, 10)
 
 # Headline 
 kartupeli_text = tk.Label(window, text="KARTUPELI", font=("Helvetica", 40), bg='lightblue')
