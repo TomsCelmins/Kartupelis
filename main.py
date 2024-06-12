@@ -404,7 +404,7 @@ def toogle_guide():
   else:
     guide_window = tk.Toplevel(window)
     guide_window.title("Game Guide")
-    guide_text = tk.Label(guide_window, text="Set up the game grid: The game grid consists of 11 rows labeled 'K', 'A', 'R', 'T', 'U', 'P', 'E', 'L', 'I', 'S',\n and 11 columns labeled '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'.\n\nPlace ships: Each player secretly places their ships on their grid. The ships can vary in size:\n\nBattleship: occupies 4 consecutive squares.\nCruiser: occupies 3 consecutive squares.\nDestroyer: occupies 2 consecutive squares.\nSubmarine: occupies 1 square.\n\nTake turns guessing: Players take turns guessing coordinates on the opponent's grid to try and hit their ships. For example, 'K3' or 'S11'.\n\nFeedback on guesses: After each guess, provide feedback on whether it was a hit or a miss:\n\nIf the guess hits a ship, mark the corresponding square as hit.\nIf the guess misses, mark the corresponding square as a miss.\n\nSink ships: When a player hits all the squares of a ship, it's considered sunk. Keep track of the number of hits on each ship.\n\nWin condition: The game ends when one player has sunk all of their opponent's ships.\n\nKeyBinds: w-up, s-down, a-left, d-right\nq-turn ship 90* to left, e - turn ship 90* to right\nf-place ship\n 1,2,3,4 - chose a ship", justify="left",anchor="nw")
+    guide_text = tk.Label(guide_window, text="Set up the game grid: The game grid consists of 11 rows labeled 'K', 'A', 'R', 'T', 'U', 'P', 'E', 'L', 'I', 'S',\n and 11 columns labeled '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'.\n\nPlace ships: Each player secretly places their ships on their grid. The ships can vary in size:\n\nBattleship: occupies 4 consecutive squares.\nCruiser: occupies 3 consecutive squares.\nDestroyer: occupies 2 consecutive squares.\n\nTake turns guessing: Players take turns guessing coordinates on the opponent's grid to try and hit their ships. For example, 'K3' or 'S11'.\n\nFeedback on guesses: After each guess, provide feedback on whether it was a hit or a miss:\n\nIf the guess hits a ship, mark the corresponding square as hit.\nIf the guess misses, mark the corresponding square as a miss.\n\nSink ships: When a player hits all the squares of a ship, it's considered sunk. Keep track of the number of hits on each ship.\n\nWin condition: The game ends when one player has sunk all of their opponent's ships.\n\nKeyBinds: w-up, s-down, a-left, d-right\nq-turn ship 90* to left, e - turn ship 90* to right\nf-place ship and shoot\n 2,3,4 - chose a ship\n\nEnter - confirm ships places\nBackspace- delete the ship", justify="left",anchor="nw")
     guide_text.pack()
 
 Guide_button = tk.Button(text="?", command=toogle_guide)
@@ -421,7 +421,7 @@ kartupeli_text = tk.Label(window, text="KARTUPELI", font=("Helvetica", 40), bg='
 kartupeli_text.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 # Button that starts the game
 button = tk.Button(text="START GAME", command=show_game, height=5, width=20, fg='black',bg='yellow')
-button.place(x = 400,y = 200)
+button.place(relx = 0.5, rely=0.5, anchor=tk.CENTER)
 
 
 window.mainloop()
